@@ -247,6 +247,26 @@ func (c *Client) All() (interface{}, error) {
 
 }
 
+func (c *Client) PreRunPodSandbox() (interface{}, error) {
+	if c == nil {
+		return 0, errors.New("runtime client is nil")
+	}
+	if c.closure != nil {
+		return c.closure()
+	}
+	switch c.useVersion {
+	case versionV1:
+		all, err := c.runtimeClient.RunPodSandbox(context.TODO(), &runtimeapi.RunPodSandboxRequest{})
+		return all, err
+	case versionV1beta:
+		all, err := c.runtimeClientV1alpha2.RunPodSandbox(context.TODO(), &runtimeapiV1alpha2.RunPodSandboxRequest{})
+		return all, err
+	default:
+		return 0, errors.New("unSupport version")
+	}
+
+}
+
 func (c *Client) GetContainerInfo(containerId string) (*ContainerInfo, error) {
 	if c == nil {
 		return nil, errors.New("runtime client is nil")
@@ -308,7 +328,7 @@ func (c *Client) GetContainerInfo(containerId string) (*ContainerInfo, error) {
 
 func main() {
 	InitRuntimeClient()
-	all, err := GetRuntimeClient().All()
+	all, err := GetRuntimeClient().PreRunPodSandbox()
 	if err != nil {
 		return
 	}
